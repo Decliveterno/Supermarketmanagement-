@@ -23,14 +23,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Preparar código de la app
+      - name: Preparar código de la app y limpiar advertencias
         run: |
           mkdir -p www
           if [ -f "supermercado-manager-dist.zip" ]; then
             unzip -o supermercado-manager-dist.zip -d www/
           fi
-          # Forzar apertura directa de cámara en selectores de archivos si existen
-          find www/ -type f -name "*.html" -exec sed -i 's/accept="image\/\*"/accept="image\/\*" capture="environment"/g' {} +
+          # Eliminar o neutralizar la advertencia estática del preview en los archivos HTML/JS
+          find www/ -type f \( -name "*.html" -o -name "*.js" \) -exec sed -i 's/En el Preview de desarrollo el navegador bloquea la cámara/Cámara lista para escanear/g' {} +
 
       - name: Instalar Cordova y compilar APK
         run: |
