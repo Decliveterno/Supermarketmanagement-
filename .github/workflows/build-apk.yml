@@ -29,8 +29,8 @@ jobs:
           if [ -f "supermercado-manager-dist.zip" ]; then
             unzip -o supermercado-manager-dist.zip -d www/
           fi
-          # Eliminar o neutralizar la advertencia estática del preview en los archivos HTML/JS
-          find www/ -type f \( -name "*.html" -o -name "*.js" \) -exec sed -i 's/En el Preview de desarrollo el navegador bloquea la cámara/Cámara lista para escanear/g' {} +
+          # Buscar y reemplazar el texto exacto de la advertencia en cualquier archivo JS o HTML
+          find www/ -type f \( -name "*.html" -o -name "*.js" \) -exec sed -i 's/En el Preview de desarrollo el navegador bloquea la cámara[^"]*/Cámara nativa lista/g' {} +
 
       - name: Instalar Cordova y compilar APK
         run: |
