@@ -39,6 +39,7 @@ jobs:
           cp -r www/* app_build/www/
           cd app_build
           cordova platform add android
+          cordova plugin add cordova-plugin-camera
           cordova build android --debug
 
       - name: Guardar APK
