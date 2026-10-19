@@ -42,7 +42,6 @@ jobs:
           cd app_build
           cordova platform add android
           cordova plugin add cordova-plugin-camera
-          cordova plugin add phonegap-plugin-barcodescanner
           cordova build android --debug
 
       - name: Guardar APK
