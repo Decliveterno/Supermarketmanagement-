@@ -23,9 +23,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Configurar Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Preparar código de la app
         run: |
           mkdir -p www
@@ -35,12 +32,14 @@ jobs:
 
       - name: Instalar Cordova y compilar APK
         run: |
+          export ANDROID_HOME=$ANDROID_SDK_ROOT
+          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
           npm install -g cordova
           cordova create app_build com.supermercado.manager "Supermercado Manager"
           rm -rf app_build/www
           cp -r www/* app_build/www/
           cd app_build
-          cordova platform add android
+          yes | cordova platform add android
           cordova build android --debug
 
       - name: Guardar APK
