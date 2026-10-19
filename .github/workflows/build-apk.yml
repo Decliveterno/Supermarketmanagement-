@@ -29,6 +29,8 @@ jobs:
           if [ -f "supermercado-manager-dist.zip" ]; then
             unzip -o supermercado-manager-dist.zip -d www/
           fi
+          # Forzar apertura directa de cámara en selectores de archivos si existen
+          find www/ -type f -name "*.html" -exec sed -i 's/accept="image\/\*"/accept="image\/\*" capture="environment"/g' {} +
 
       - name: Instalar Cordova y compilar APK
         run: |
@@ -40,6 +42,7 @@ jobs:
           cd app_build
           cordova platform add android
           cordova plugin add cordova-plugin-camera
+          cordova plugin add phonegap-plugin-barcodescanner
           cordova build android --debug
 
       - name: Guardar APK
