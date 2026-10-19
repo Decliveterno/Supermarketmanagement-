@@ -32,14 +32,13 @@ jobs:
 
       - name: Instalar Cordova y compilar APK
         run: |
-          export ANDROID_HOME=$ANDROID_SDK_ROOT
-          export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools
           npm install -g cordova
           cordova create app_build com.supermercado.manager "Supermercado Manager"
           rm -rf app_build/www
+          mkdir -p app_build/www
           cp -r www/* app_build/www/
           cd app_build
-          yes | cordova platform add android
+          cordova platform add android
           cordova build android --debug
 
       - name: Guardar APK
