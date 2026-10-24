@@ -1,4 +1,36 @@
-- name: Instalar Cordova y compilar APK
+name: Compilar APK Android
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Configurar Java JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Preparar código de la app
+        run: |
+          mkdir -p www
+          if [ -f "supermercado-manager-dist.zip" ]; then
+            unzip -o supermercado-manager-dist.zip -d www/
+          fi
+
+      - name: Instalar Cordova y configurar permisos nativos de Android
         run: |
           npm install -g cordova
           cordova create app_build com.supermercado.manager "Supermercado Manager"
@@ -13,7 +45,16 @@
           # Inyectar permisos de cámara en AndroidManifest.xml
           sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />' platforms/android/app/src/main/AndroidManifest.xml
 
-          # Solicitar permiso de cámara en MainActivity al iniciar
+          # Solicitar permiso de cámara en MainActivity al abrir la app
           find platforms/android/app/src/main/java -name "MainActivity.java" -exec sed -i '/super.onCreate(savedInstanceState);/a \        if (android.os.Build.VERSION.SDK_INT >= 23) { requestPermissions(new String[]{"android.permission.CAMERA"}, 100); }' {} +
 
+          # Conceder acceso a la cámara en el WebView de Android
+          find platforms/android/CordovaLib -name "SystemWebChromeClient.java" -exec sed -i 's/public void onPermissionRequest(final PermissionRequest request) {/public void onPermissionRequest(final PermissionRequest request) { request.grant(request.getResources()); return;/g' {} +
+
           cordova build android --debug
+
+      - name: Guardar APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Supermercado-Manager-APK
+          path: app_build/platforms/android/app/build/outputs/apk/debug/app-debug.apk
