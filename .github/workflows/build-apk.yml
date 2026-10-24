@@ -30,7 +30,7 @@ jobs:
             unzip -o supermercado-manager-dist.zip -d www/
           fi
 
-      - name: Instalar Cordova y configurar permisos nativos de Android
+      - name: Instalar Cordova y compilar APK
         run: |
           npm install -g cordova
           cordova create app_build com.supermercado.manager "Supermercado Manager"
@@ -42,14 +42,13 @@ jobs:
           cordova plugin add cordova-plugin-camera
           cordova plugin add cordova-plugin-android-permissions
 
-          # Inyectar permisos de cámara en AndroidManifest.xml
-          sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />' platforms/android/app/src/main/AndroidManifest.xml
+          # Agregar permisos de camara en config.xml
+          sed -i '/<\/widget>/i \    <platform name="android">\n        <config-file target="AndroidManifest.xml" parent="/*">\n            <uses-permission android:name="android.permission.CAMERA" />\n            <uses-feature android:name="android.hardware.camera" android:required="false" />\n            <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />\n        </config-file>\n    </platform>' config.xml || true
 
-          # Solicitar permiso de cámara en MainActivity al abrir la app
-          find platforms/android/app/src/main/java -name "MainActivity.java" -exec sed -i '/super.onCreate(savedInstanceState);/a \        if (android.os.Build.VERSION.SDK_INT >= 23) { requestPermissions(new String[]{"android.permission.CAMERA"}, 100); }' {} +
-
-          # Conceder acceso a la cámara en el WebView de Android
-          find platforms/android/CordovaLib -name "SystemWebChromeClient.java" -exec sed -i 's/public void onPermissionRequest(final PermissionRequest request) {/public void onPermissionRequest(final PermissionRequest request) { request.grant(request.getResources()); return;/g' {} +
+          # Inyectar permisos de camara en AndroidManifest.xml
+          if [ -f "platforms/android/app/src/main/AndroidManifest.xml" ]; then
+            sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />' platforms/android/app/src/main/AndroidManifest.xml || true
+          fi
 
           cordova build android --debug
 
