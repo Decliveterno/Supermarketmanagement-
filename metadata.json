@@ -1,0 +1,8 @@
+{
+  "name": "Supermercado Manager Pro",
+  "description": "Sistema de punto de venta (POS), inventario bimonetario COP/VES, gestión de clientes, deudas y reportes optimizado para Android y PWA instalable.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
