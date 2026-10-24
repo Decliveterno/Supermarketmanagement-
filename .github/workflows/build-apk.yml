@@ -1,38 +1,4 @@
-name: Compilar APK Android
-
-on:
-  push:
-    branches: [ main, master ]
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Descargar código del repositorio
-        uses: actions/checkout@v4
-
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Configurar Java JDK 17
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-
-      - name: Preparar código de la app y limpiar advertencias
-        run: |
-          mkdir -p www
-          if [ -f "supermercado-manager-dist.zip" ]; then
-            unzip -o supermercado-manager-dist.zip -d www/
-          fi
-          # Buscar y reemplazar el texto exacto de la advertencia en cualquier archivo JS o HTML
-          find www/ -type f \( -name "*.html" -o -name "*.js" \) -exec sed -i 's/En el Preview de desarrollo el navegador bloquea la cámara[^"]*/Cámara nativa lista/g' {} +
-
-      - name: Instalar Cordova y compilar APK
+- name: Instalar Cordova y compilar APK
         run: |
           npm install -g cordova
           cordova create app_build com.supermercado.manager "Supermercado Manager"
@@ -42,10 +8,12 @@ jobs:
           cd app_build
           cordova platform add android
           cordova plugin add cordova-plugin-camera
-          cordova build android --debug
+          cordova plugin add cordova-plugin-android-permissions
 
-      - name: Guardar APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: Supermercado-Manager-APK
-          path: app_build/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          # Inyectar permisos de cámara en AndroidManifest.xml
+          sed -i '/<\/manifest>/i \    <uses-permission android:name="android.permission.CAMERA" />\n    <uses-feature android:name="android.hardware.camera" android:required="false" />\n    <uses-feature android:name="android.hardware.camera.autofocus" android:required="false" />' platforms/android/app/src/main/AndroidManifest.xml
+
+          # Solicitar permiso de cámara en MainActivity al iniciar
+          find platforms/android/app/src/main/java -name "MainActivity.java" -exec sed -i '/super.onCreate(savedInstanceState);/a \        if (android.os.Build.VERSION.SDK_INT >= 23) { requestPermissions(new String[]{"android.permission.CAMERA"}, 100); }' {} +
+
+          cordova build android --debug
